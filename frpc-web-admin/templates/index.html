@@ -355,6 +355,12 @@
                     removeBtn.closest('.proxy-item').parentElement.remove();
                     updateProxyNumbers(); // 更新序号
                 }
+                
+                // 新增跳转按钮处理
+                const jumpBtn = e.target.closest('.btn-jump');
+                if (jumpBtn) {
+                    jumpToAddress(jumpBtn);  // 调用跳转函数
+                }
             })
 
             // 更新所有代理项的序号
@@ -481,8 +487,15 @@
             const proxyItem = button.closest('.proxy-item');
             const serverAddr = document.getElementById('serverAddr').value;
             const remotePort = proxyItem.querySelector('[name="remotePort"]').value;
+            
+            // 新增参数验证
+            if (!serverAddr || !remotePort) {
+                showFeedback(false, '请先填写服务器地址和远程端口');
+                return;
+            }
+            
             const url = `http://${serverAddr}:${remotePort}`;
-            window.open(url, '_blank');
+            window.open(url, '_blank');  // 确保在新窗口打开
         }
     </script>
 </body>
