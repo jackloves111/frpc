@@ -4,7 +4,7 @@ import os
 import subprocess
 import requests
 
-app = Flask(__name__, static_folder='frpc-web-admin/static', static_url_path='/static')
+app = Flask(__name__, static_folder='/app/static', static_url_path='/static')
 
 # 配置文件路径
 FRPC_CONFIG = '/frp/frpc.toml'

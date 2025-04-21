@@ -41,6 +41,7 @@ COPY --from=builder /build/frp /frp
 COPY frpc-web-admin/requirements.txt .
 RUN pip install -r requirements.txt
 COPY frpc-web-admin/app.py .
+COPY frpc-web-admin/static static/
 COPY frpc-web-admin/templates templates/
 
 # 复制supervisor配置
