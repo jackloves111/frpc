@@ -1,11 +1,46 @@
 from flask import Flask, render_template, request, jsonify
 import toml
 import os
+import subprocess
+import requests
 
 app = Flask(__name__)
 
 # 配置文件路径
 FRPC_CONFIG = '/frp/frpc.toml'
+
+def restart_frpc():
+    """重启frpc服务"""
+    try:
+        # 使用HTTP接口重启frpc服务
+        response = requests.post('http://localhost:9001/RPC2', 
+            auth=('admin', 'admin'),  # 默认用户名和密码
+            headers={'Content-Type': 'text/xml'},
+            data='''<?xml version="1.0"?>
+            <methodCall>
+                <methodName>supervisor.stopProcess</methodName>
+                <params><param><value><string>frpc</string></value></param></params>
+            </methodCall>''')
+        
+        if response.status_code != 200:
+            raise Exception("停止服务失败")
+            
+        response = requests.post('http://localhost:9001/RPC2',
+            auth=('admin', 'admin'),
+            headers={'Content-Type': 'text/xml'},
+            data='''<?xml version="1.0"?>
+            <methodCall>
+                <methodName>supervisor.startProcess</methodName>
+                <params><param><value><string>frpc</string></value></param></params>
+            </methodCall>''')
+            
+        if response.status_code != 200:
+            raise Exception("启动服务失败")
+            
+        return True
+    except Exception as e:
+        print(f'重启frpc服务失败: {str(e)}')
+        return False
 
 def read_config():
     """读取frpc.toml配置文件"""
@@ -51,7 +86,10 @@ def update_config():
     try:
         config = request.get_json()
         if save_config(config):
-            return jsonify({'success': True, 'message': '配置已更新'})
+            # 重启frpc服务
+            if restart_frpc():
+                return jsonify({'success': True, 'message': '配置已更新并重启服务'})
+            return jsonify({'success': False, 'message': '配置已更新，但重启服务失败'}), 500
         return jsonify({'success': False, 'message': '保存配置失败'}), 500
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
