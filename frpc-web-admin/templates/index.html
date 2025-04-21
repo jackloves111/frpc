@@ -81,6 +81,27 @@
             position: relative;
             transition: var(--transition-base);
             border: 1px solid var(--border-color);
+            padding-left: 3.5rem; /* 增加左侧序号的宽度 */
+        }
+
+        .proxy-number {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3rem; /* 增加序号宽度 */
+            border-right: 1px solid var(--border-color);
+            border-radius: 6px 0 0 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em; /* 增大序号字体 */
+        }
+
+        .proxy-item:hover .proxy-number {
+            color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.1);
         }
 
         .proxy-item:hover {
@@ -175,7 +196,7 @@
         .drag-handle {
             cursor: move;
             position: absolute;
-            left: -12px;
+            left: -24px; /* 调整拖动手柄位置 */
             top: 50%;
             transform: translateY(-50%);
             opacity: 0;
@@ -190,6 +211,12 @@
 
         .drag-handle:hover {
             color: var(--primary-color);
+        }
+        .color-number {
+            color: #2196F3;
+        }
+        .width-md-1 {
+            width: 5.5% !important;
         }
     </style>
 </head>
@@ -257,11 +284,17 @@
     <template id="proxyTemplate">
         <div class="col-12">
             <div class="proxy-item">
+                <div class="proxy-number"></div>
                 <div class="drag-handle">
                     <i class="bi bi-grip-vertical fs-5"></i>
                 </div>
+
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-1 width-md-1">
+                        <!-- 新增的序号列 -->
+                        <div class="proxy-number color-number"></div>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">规则名称</label>
                         <input type="text" class="form-control" name="name" required>
                     </div>
@@ -305,9 +338,17 @@
                 const removeBtn = e.target.closest('.btn-remove');
                 if (removeBtn) {
                     // 删除对应的代理项容器
-                    removeBtn.closest('.proxy-item').parentElement.remove(); // 修改删除逻辑
+                    removeBtn.closest('.proxy-item').parentElement.remove();
+                    updateProxyNumbers(); // 更新序号
                 }
             })
+
+            // 更新所有代理项的序号
+            function updateProxyNumbers() {
+                proxyList.querySelectorAll('.proxy-item').forEach((item, index) => {
+                    item.querySelector('.proxy-number').textContent = `#${index + 1}`;
+                });
+            }
 
             // 表单提交
             form.addEventListener('submit', async e => {
@@ -346,23 +387,25 @@
                     
                     proxyList.innerHTML = ''
                     config.proxies?.forEach(proxy => addProxy(proxy))
+                    updateProxyNumbers() // 确保初始加载时也更新序号
                 } catch (error) {
                     showFeedback(false, '配置加载失败')
                 }
             }
 
             function addProxy(data = {}) {
-                const proxy = proxyTemplate.content.cloneNode(true)
-                const element = proxy.querySelector('.proxy-item')
+                const proxy = proxyTemplate.content.cloneNode(true);
+                const element = proxy.querySelector('.proxy-item');
                 
                 // 填充数据
-                const fields = ['name', 'type', 'localIP', 'localPort', 'remotePort']
+                const fields = ['name', 'type', 'localIP', 'localPort', 'remotePort'];
                 fields.forEach(field => {
-                    const input = element.querySelector(`[name="${field}"]`)
-                    if (input && data[field]) input.value = data[field]
-                })
+                    const input = element.querySelector(`[name="${field}"]`);
+                    if (input && data[field]) input.value = data[field];
+                });
 
-                proxyList.appendChild(proxy)
+                proxyList.appendChild(proxy);
+                updateProxyNumbers(); // 更新序号
             }
 
             function serializeConfig() {
