@@ -378,16 +378,31 @@
                 if (!config) return; // 如果配置验证失败，直接返回
                 
                 try {
+                    showFeedback(true, '配置提交中，请稍等...', true)
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 延长超时时间至15秒
+                    
                     const response = await fetch('/api/config', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(config)
+                        body: JSON.stringify(config),
+                        signal: controller.signal
                     })
+                    
+                    clearTimeout(timeoutId);
                     
                     const result = await response.json()
                     showFeedback(result.success, result.message)
                 } catch (error) {
-                    showFeedback(false, '网络连接异常')
+                    console.error('提交错误:', error);
+                    
+                    // 判断是否为超时
+                    if (error.name === 'AbortError') {
+                        showFeedback(true, '服务器响应超时，但配置可能已更新。请稍后刷新页面检查配置。')
+                    } else {
+                        showFeedback(false, '网络连接异常，请检查网络连接并稍后重试。')
+                    }
                 }
             })
 
