@@ -26,6 +26,7 @@ LABEL maintainer="Stille <stille@ioiox.com>"
 ENV TZ=Asia/Shanghai
 ENV FRPC_CONFIG=/frp/frpc.toml
 ENV PORT=7070
+ENV SUPERVISOR_PORT=9001
 
 # 安装必要的包
 RUN apk add --no-cache tzdata docker-cli supervisor \

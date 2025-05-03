@@ -15,7 +15,8 @@ def check_frpc_running():
     """检查frpc进程是否正在运行"""
     try:
         # 尝试通过supervisor API检查服务状态
-        response = requests.post('http://localhost:9001/RPC2',
+        supervisor_port = os.environ.get('SUPERVISOR_PORT', '9001')
+        response = requests.post(f'http://localhost:{supervisor_port}/RPC2',
             auth=('admin', 'admin'),
             headers={'Content-Type': 'text/xml'},
             data='''<?xml version="1.0"?>
@@ -59,7 +60,8 @@ def restart_frpc():
         # 使用HTTP接口重启frpc服务
         try:
             # 停止服务
-            requests.post('http://localhost:9001/RPC2', 
+            supervisor_port = os.environ.get('SUPERVISOR_PORT', '9001')
+            requests.post(f'http://localhost:{supervisor_port}/RPC2', 
                 auth=('admin', 'admin'),
                 headers={'Content-Type': 'text/xml'},
                 data='''<?xml version="1.0"?>
@@ -76,7 +78,8 @@ def restart_frpc():
         
         try:
             # 启动服务
-            requests.post('http://localhost:9001/RPC2',
+            supervisor_port = os.environ.get('SUPERVISOR_PORT', '9001')
+            requests.post(f'http://localhost:{supervisor_port}/RPC2',
                 auth=('admin', 'admin'),
                 headers={'Content-Type': 'text/xml'},
                 data='''<?xml version="1.0"?>
