@@ -171,4 +171,6 @@ def update_config():
         return jsonify({'success': False, 'message': f'更新配置异常: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=7070)
+    # 从环境变量获取端口号，默认为7070
+    port = int(os.environ.get('PORT', 7070))
+    app.run(host='0.0.0.0', port=port)
