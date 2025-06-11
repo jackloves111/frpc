@@ -306,8 +306,8 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-4">
-                    <h2 class="h4 fw-bold mb-0 me-3" id="pageTitle" style="cursor: pointer;" title="点击编辑标题">FRP隧道管理系统</h2>
-                    <input type="text" class="form-control h4 fw-bold" id="titleInput" style="display: none; max-width: 300px;" value="FRP隧道管理系统">
+                    <h2 class="h4 fw-bold mb-0 me-3" id="pageTitle" style="cursor: pointer;" title="点击编辑标题">{{ title if title else 'FRP隧道管理系统' }}</h2>
+                    <input type="text" class="form-control h4 fw-bold" id="titleInput" style="display: none; max-width: 300px;" value="{{ title if title else 'FRP隧道管理系统' }}">
                     <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="editTitleBtn" title="编辑标题">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -626,8 +626,34 @@
             // 退出编辑模式
             function exitEditMode() {
                 const newTitle = titleInput.value.trim() || 'FRP隧道管理系统';
-                pageTitle.textContent = newTitle;
-                document.title = newTitle;
+                
+                // 调用后端API保存标题
+                fetch('/api/title', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: newTitle })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        pageTitle.textContent = data.title;
+                        document.title = data.title;
+                        showFeedback(true, data.message);
+                    } else {
+                        showFeedback(false, data.message || '保存标题失败');
+                        // 如果保存失败，恢复原标题
+                        titleInput.value = pageTitle.textContent;
+                    }
+                })
+                .catch(error => {
+                    console.error('保存标题错误:', error);
+                    showFeedback(false, '保存标题时发生网络错误');
+                    // 如果保存失败，恢复原标题
+                    titleInput.value = pageTitle.textContent;
+                });
+                
                 pageTitle.style.display = 'block';
                 titleInput.style.display = 'none';
                 editTitleBtn.innerHTML = '<i class="bi bi-pencil"></i>';

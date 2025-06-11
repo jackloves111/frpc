@@ -10,6 +10,7 @@ app = Flask(__name__, static_folder='/app/static', static_url_path='/static')
 
 # 配置文件路径
 FRPC_CONFIG = '/frp/frpc.toml'
+TITLE_CONFIG = '/frp/title.txt'
 
 def check_frpc_running():
     """检查frpc进程是否正在运行"""
@@ -135,11 +136,34 @@ def save_config(config):
         print(f'保存配置文件错误: {str(e)}')
         return False
 
+def read_title():
+    """读取系统标题"""
+    try:
+        if os.path.exists(TITLE_CONFIG):
+            with open(TITLE_CONFIG, 'r', encoding='utf-8') as f:
+                title = f.read().strip()
+                return title if title else 'FRP隧道管理系统'
+        return 'FRP隧道管理系统'
+    except Exception as e:
+        print(f'读取标题文件错误: {str(e)}')
+        return 'FRP隧道管理系统'
+
+def save_title(title):
+    """保存系统标题"""
+    try:
+        with open(TITLE_CONFIG, 'w', encoding='utf-8') as f:
+            f.write(title.strip())
+        return True
+    except Exception as e:
+        print(f'保存标题文件错误: {str(e)}')
+        return False
+
 @app.route('/')
 def index():
     """主页面"""
     result = read_config()
-    return render_template('index.html', config=result)
+    title = read_title()
+    return render_template('index.html', config=result, title=title)
 
 @app.route('/api/config', methods=['GET'])
 def get_config():
@@ -172,6 +196,37 @@ def update_config():
     except Exception as e:
         print(f'更新配置异常: {str(e)}')
         return jsonify({'success': False, 'message': f'更新配置异常: {str(e)}'}), 500
+
+@app.route('/api/title', methods=['GET'])
+def get_title():
+    """获取系统标题"""
+    try:
+        title = read_title()
+        return jsonify({'success': True, 'title': title})
+    except Exception as e:
+        print(f'获取标题异常: {str(e)}')
+        return jsonify({'success': False, 'message': f'获取标题异常: {str(e)}'}), 500
+
+@app.route('/api/title', methods=['POST'])
+def update_title():
+    """更新系统标题"""
+    try:
+        data = request.get_json()
+        title = data.get('title', 'FRP隧道管理系统')
+        
+        if not title.strip():
+            title = 'FRP隧道管理系统'
+            
+        save_result = save_title(title)
+        
+        if save_result:
+            return jsonify({'success': True, 'message': '标题已保存', 'title': title})
+        else:
+            return jsonify({'success': False, 'message': '保存标题失败'}), 500
+            
+    except Exception as e:
+        print(f'更新标题异常: {str(e)}')
+        return jsonify({'success': False, 'message': f'更新标题异常: {str(e)}'}), 500
 
 if __name__ == '__main__':
     # 从环境变量获取端口号，默认为7070
