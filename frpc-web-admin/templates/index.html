@@ -421,9 +421,28 @@
             proxyList.addEventListener('click', function(e) {
                 const removeBtn = e.target.closest('.btn-remove');
                 if (removeBtn) {
-                    // 删除对应的代理项容器
-                    removeBtn.closest('.proxy-item').parentElement.remove();
-                    updateProxyNumbers(); // 更新序号
+                    // 添加删除动画
+                    const proxyContainer = removeBtn.closest('.proxy-item').parentElement;
+                    const proxyItem = removeBtn.closest('.proxy-item');
+                    
+                    // 添加删除动画类
+                    proxyItem.style.transition = 'all 0.3s ease-out';
+                    proxyItem.style.transform = 'translateX(-100%)';
+                    proxyItem.style.opacity = '0';
+                    proxyItem.style.height = proxyItem.offsetHeight + 'px';
+                    
+                    // 动画完成后删除元素
+                    setTimeout(() => {
+                        proxyItem.style.height = '0';
+                        proxyItem.style.marginBottom = '0';
+                        proxyItem.style.paddingTop = '0';
+                        proxyItem.style.paddingBottom = '0';
+                        
+                        setTimeout(() => {
+                            proxyContainer.remove();
+                            updateProxyNumbers(); // 更新序号
+                        }, 200);
+                    }, 300);
                 }
                 
                 // 新增跳转按钮处理
