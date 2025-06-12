@@ -517,14 +517,14 @@
                     document.getElementById('serverPort').value = config.serverPort || ''
                     
                     proxyList.innerHTML = ''
-                    config.proxies?.forEach(proxy => addProxy(proxy))
+                    config.proxies?.forEach(proxy => addProxy(proxy, false))
                     updateProxyNumbers() // 确保初始加载时也更新序号
                 } catch (error) {
                     showFeedback(false, '配置加载失败')
                 }
             }
 
-            function addProxy(data = {}) {
+            function addProxy(data = {}, shouldScroll = true) {
                 const proxy = proxyTemplate.content.cloneNode(true);
                 const element = proxy.querySelector('.proxy-item');
                 
@@ -555,13 +555,15 @@
                 
                 updateProxyNumbers(); // 更新序号
                 
-                // 滚动到新添加的元素
-                setTimeout(() => {
-                    element.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                }, 200);
+                // 只有在用户手动添加时才滚动到新添加的元素
+                if (shouldScroll) {
+                    setTimeout(() => {
+                        element.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }, 200);
+                }
             }
 
             function serializeConfig() {
