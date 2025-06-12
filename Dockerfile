@@ -26,7 +26,6 @@ LABEL maintainer="Stille <stille@ioiox.com>"
 ENV TZ=Asia/Shanghai
 ENV FRPC_CONFIG=/frp/frpc.toml
 ENV PORT=7070
-ENV SUPERVISOR_PORT=9001
 
 # 安装必要的包
 RUN apk add --no-cache tzdata docker-cli supervisor \
@@ -40,11 +39,8 @@ WORKDIR /app
 COPY --from=builder /build/frp /frp
 
 # 复制web管理界面文件
-COPY frpc-web-admin/requirements.txt .
+COPY frpc-web-admin .
 RUN pip install -r requirements.txt
-COPY frpc-web-admin/app.py .
-COPY frpc-web-admin/static static/
-COPY frpc-web-admin/templates templates/
 
 # 复制supervisor配置
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
