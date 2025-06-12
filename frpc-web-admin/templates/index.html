@@ -331,14 +331,19 @@
 
                     <!-- 代理配置 -->
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="mb-3">
                             <h5 class="fw-bold m-0">隧道规则</h5>
-                            <button type="button" class="btn btn-primary btn-sm" id="addProxy">
+                        </div>
+                        
+                        <div id="proxyList" class="row g-3" style="margin-bottom: 20px;">
+                        </div>
+                        
+                        <!-- 添加隧道按钮移到底部 -->
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary" id="addProxy">
                                 <i class="bi bi-plus-lg"></i> 添加隧道
                             </button>
                         </div>
-                        
-                        <div id="proxyList" class="row g-3" style="margin-bottom: 40px;">
                     </div>
 
                 </form>
@@ -530,8 +535,33 @@
                     if (input && data[field]) input.value = data[field];
                 });
 
-                proxyList.appendChild(proxy);
+                // 添加动画效果
+                const container = document.createElement('div');
+                container.className = 'col-12';
+                container.appendChild(element);
+                
+                // 设置初始状态（隐藏）
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                proxyList.appendChild(container);
+                
+                // 触发动画（显示）
+                requestAnimationFrame(() => {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                });
+                
                 updateProxyNumbers(); // 更新序号
+                
+                // 滚动到新添加的元素
+                setTimeout(() => {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 200);
             }
 
             function serializeConfig() {
