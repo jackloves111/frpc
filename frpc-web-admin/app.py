@@ -10,31 +10,11 @@ app = Flask(__name__, static_folder='/app/static', static_url_path='/static')
 
 # 配置文件路径
 FRPC_CONFIG = '/frp/frpc.toml'
-TITLE_CONFIG = '/frp/title.txt'
+TITLE_CONFIG = './title.txt'
 
 def check_frpc_running():
     """检查frpc进程是否正在运行"""
     try:
-        # 尝试通过supervisor API检查服务状态
-        supervisor_port = os.environ.get('SUPERVISOR_PORT', '9001')
-        response = requests.post(f'http://localhost:{supervisor_port}/RPC2',
-            auth=('admin', 'admin'),
-            headers={'Content-Type': 'text/xml'},
-            data='''<?xml version="1.0"?>
-            <methodCall>
-                <methodName>supervisor.getProcessInfo</methodName>
-                <params><param><value><string>frpc</string></value></param></params>
-            </methodCall>''',
-            timeout=3)
-        
-        if response.status_code == 200 and 'RUNNING' in response.text:
-            return True
-        
-        # 如果通过API方式失败，尝试使用进程检查
-        process = subprocess.run(['ps', '-ef'], capture_output=True, text=True)
-        return 'frpc' in process.stdout
-    except Exception as e:
-        print(f'检查frpc状态失败: {str(e)}')
         # 备用方案：检查frpc通常使用的端口
         try:
             # 尝试从配置文件中获取实际端口
@@ -49,8 +29,16 @@ def check_frpc_running():
             sock.close()
             return result == 0
         except:
-            # 如果所有方法都失败，假设服务在运行
-            return True
+            # 如果配置文件检查失败，尝试使用进程检查
+            try:
+                process = subprocess.run(['ps', '-ef'], capture_output=True, text=True)
+                return 'frpc' in process.stdout
+            except:
+                # 如果所有方法都失败，假设服务在运行
+                return True
+    except Exception as e:
+        print(f'检查frpc状态失败: {str(e)}')
+        return True
 
 def restart_frpc():
     """重启frpc服务"""
@@ -58,42 +46,28 @@ def restart_frpc():
         # 检查重启前的状态
         was_running = check_frpc_running()
         
-        # 使用HTTP接口重启frpc服务
+        # 使用进程方式重启frpc服务
         try:
-            # 停止服务
-            supervisor_port = os.environ.get('SUPERVISOR_PORT', '9001')
-            requests.post(f'http://localhost:{supervisor_port}/RPC2', 
-                auth=('admin', 'admin'),
-                headers={'Content-Type': 'text/xml'},
-                data='''<?xml version="1.0"?>
-                <methodCall>
-                    <methodName>supervisor.stopProcess</methodName>
-                    <params><param><value><string>frpc</string></value></param></params>
-                </methodCall>''',
-                timeout=3)
+            # 尝试杀死现有的frpc进程
+            subprocess.run(['pkill', '-f', 'frpc'], capture_output=True)
+            print('已停止frpc进程')
         except Exception as e:
-            print(f'停止frpc服务失败: {str(e)}')
+            print(f'停止frpc进程失败: {str(e)}')
         
-        # 等待服务停止
-        time.sleep(1)
+        # 等待进程完全停止
+        time.sleep(2)
         
         try:
-            # 启动服务
-            supervisor_port = os.environ.get('SUPERVISOR_PORT', '9001')
-            requests.post(f'http://localhost:{supervisor_port}/RPC2',
-                auth=('admin', 'admin'),
-                headers={'Content-Type': 'text/xml'},
-                data='''<?xml version="1.0"?>
-                <methodCall>
-                    <methodName>supervisor.startProcess</methodName>
-                    <params><param><value><string>frpc</string></value></param></params>
-                </methodCall>''',
-                timeout=3)
+            # 启动新的frpc进程
+            subprocess.Popen(['/frp/frpc', '-c', '/frp/frpc.toml'], 
+                           stdout=subprocess.DEVNULL, 
+                           stderr=subprocess.DEVNULL)
+            print('已启动frpc进程')
         except Exception as e:
-            print(f'启动frpc服务失败: {str(e)}')
+            print(f'启动frpc进程失败: {str(e)}')
         
         # 等待服务启动
-        time.sleep(2)
+        time.sleep(3)
         
         # 检查重启后的状态
         now_running = check_frpc_running()
