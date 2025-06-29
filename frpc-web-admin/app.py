@@ -92,7 +92,37 @@ def read_config():
         if os.path.exists(FRPC_CONFIG):
             with open(FRPC_CONFIG, 'r', encoding='utf-8') as f:
                 return {'success': True, 'data': toml.load(f)}
-        return {'success': False, 'message': '请映射/frp/frpc.toml文件才可以使用', 'data': {'serverAddr': '', 'serverPort': 0, 'proxies': []}}
+        else:
+            # 如果配置文件不存在，自动生成默认配置文件
+            default_config = {
+                'serverAddr': '114.114.114.114',
+                'serverPort': 3699,
+                'proxies': [
+                    {
+                        'name': 'NT',
+                        'type': 'tcp',
+                        'localIP': '127.0.0.1',
+                        'localPort': 3000,
+                        'remotePort': 3000
+                    },
+                    {
+                        'name': 'MP',
+                        'type': 'tcp',
+                        'localIP': '127.0.0.1',
+                        'localPort': 3005,
+                        'remotePort': 3005
+                    }
+                ]
+            }
+            
+            # 尝试创建配置文件
+            if save_config(default_config):
+                print('已自动生成默认配置文件')
+                return {'success': True, 'data': default_config}
+            else:
+                print('自动生成配置文件失败')
+                return {'success': False, 'message': '配置文件不存在且无法自动生成', 'data': default_config}
+                
     except Exception as e:
         print(f'读取配置文件错误: {str(e)}')
         return {'success': False, 'message': str(e), 'data': {'serverAddr': '', 'serverPort': 0, 'proxies': []}}
