@@ -42,6 +42,10 @@ COPY --from=builder /build/frp /frp
 COPY frpc-web-admin .
 RUN pip install -r requirements.txt
 
+# 复制配置初始化脚本
+COPY init-config.py /app/init-config.py
+RUN chmod +x /app/init-config.py
+
 # 复制supervisor配置
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
