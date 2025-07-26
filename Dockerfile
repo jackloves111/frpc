@@ -35,8 +35,12 @@ RUN apk add --no-cache tzdata docker-cli supervisor \
 # 创建必要的目录
 WORKDIR /app
 
-# 复制frpc文件
-COPY --from=builder /build/frp /frp
+# 复制frpc二进制文件到系统路径
+COPY --from=builder /build/frp/frpc /usr/local/bin/frpc
+RUN chmod +x /usr/local/bin/frpc
+
+# 创建配置目录
+RUN mkdir -p /frp
 
 # 复制web管理界面文件
 COPY frpc-web-admin .
